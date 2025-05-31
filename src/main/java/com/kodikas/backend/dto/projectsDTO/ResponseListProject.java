@@ -1,6 +1,6 @@
-package com.kodikas.backend.dto;
+package com.kodikas.backend.dto.projectsDTO;
 
-public record DataDetailsProject(
+public record ResponseListProject(
         Long id,
         String name,
         String description,

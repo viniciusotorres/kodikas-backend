@@ -1,8 +1,8 @@
 package com.kodikas.backend.service;
 
-import com.kodikas.backend.dto.DataDetailsProject;
-import com.kodikas.backend.dto.ResponseCreateProjectDTO;
-import com.kodikas.backend.dto.ResponseListProject;
+import com.kodikas.backend.dto.projectsDTO.ResponseDetailsProject;
+import com.kodikas.backend.dto.projectsDTO.ResponseCreateProjectDTO;
+import com.kodikas.backend.dto.projectsDTO.ResponseListProject;
 import com.kodikas.backend.model.Company;
 import com.kodikas.backend.model.Project;
 import com.kodikas.backend.model.User;
@@ -40,9 +40,9 @@ public class ProjectService {
                 .toList();
     }
 
-    public DataDetailsProject getProjectById(Long id) {
+    public ResponseDetailsProject getProjectById(Long id) {
         return projectRepository.findById(id)
-                .map(project -> new DataDetailsProject(
+                .map(project -> new ResponseDetailsProject(
                         project.getId(),
                         project.getName(),
                         project.getDescription(),
@@ -81,7 +81,7 @@ public class ProjectService {
         );
     }
 
-    public DataDetailsProject updateProject(Long id, Project projectDetails) {
+    public ResponseDetailsProject updateProject(Long id, Project projectDetails) {
         Project project = projectRepository.findById(id).orElse(null);
         Company company = companyService.getCompanyById(projectDetails.getCompany().getId());
         User user = userService.getUserById(projectDetails.getUser().getId());
@@ -103,7 +103,7 @@ public class ProjectService {
             project.setUser(user);
             project.setCompany(company);
             projectRepository.save(project);
-            return new DataDetailsProject(
+            return new ResponseDetailsProject(
                     project.getId(),
                     project.getName(),
                     project.getDescription(),

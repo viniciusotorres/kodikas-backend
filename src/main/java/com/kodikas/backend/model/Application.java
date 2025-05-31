@@ -20,8 +20,14 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
+    private String name;
+
+    @Column(nullable = false, length = 500)
+    private String description;
+
     @Column(nullable = false, length = 50)
-    private String status;
+    private ApplicationStatus status;
 
     @Column(name = "applied_at", nullable = false)
     private LocalDateTime appliedAt;
@@ -29,14 +35,6 @@ public class Application {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
-
-    @ManyToOne
-    @JoinColumn(name = "company_id")
-    private Company company;
 
     @Column(nullable = false)
     private Boolean ativo = true;

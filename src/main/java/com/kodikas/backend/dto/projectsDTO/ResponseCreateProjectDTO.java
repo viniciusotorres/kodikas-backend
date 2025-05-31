@@ -1,4 +1,4 @@
-package com.kodikas.backend.dto;
+package com.kodikas.backend.dto.projectsDTO;
 
 public record ResponseCreateProjectDTO(
         Long id,

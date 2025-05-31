@@ -38,9 +38,6 @@ public class Project {
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @OneToMany(mappedBy = "project")
-    private List<Application> applications;
-
     @Column(nullable = false)
     private Boolean ativo = true;
 
