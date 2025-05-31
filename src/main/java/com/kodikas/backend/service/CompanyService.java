@@ -14,7 +14,7 @@ public class CompanyService {
     private CompanyRepository companyRepository;
 
     public List<Company> getAllCompanies() {
-        return companyRepository.findAll();
+        return companyRepository.findByAtivoTrue();
     }
 
     public Company getCompanyById(Long id) {
@@ -31,15 +31,21 @@ public class CompanyService {
             company.setName(companyDetails.getName());
             company.setDescription(companyDetails.getDescription());
             company.setCreatedAt(companyDetails.getCreatedAt());
-            // Update other fields as necessary
 
             return companyRepository.save(company);
         }
         return null;
     }
 
-    public void deleteCompany(Long id) {
-        companyRepository.deleteById(id);
+    public boolean deleteCompany(Long id) {
+        Company company = companyRepository.findById(id).orElse(null);
+
+        if (company != null && company.getAtivo()) {
+            company.setAtivo(false);
+            companyRepository.save(company);
+            return true;
+        }
+        return false;
     }
 
 }
