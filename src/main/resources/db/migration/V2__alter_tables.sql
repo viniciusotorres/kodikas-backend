@@ -1,0 +1,19 @@
+ALTER TABLE companies
+    ADD COLUMN ativo BOOLEAN NOT NULL DEFAULT TRUE;
+
+UPDATE companies SET ativo = TRUE;
+
+ALTER TABLE users
+    ADD COLUMN ativo BOOLEAN NOT NULL DEFAULT TRUE;
+
+UPDATE users SET ativo = TRUE;
+
+ALTER TABLE projects
+    ADD COLUMN ativo BOOLEAN NOT NULL DEFAULT TRUE;
+
+UPDATE projects SET ativo = TRUE;
+
+ALTER TABLE applications
+    ADD COLUMN ativo BOOLEAN NOT NULL DEFAULT TRUE;
+
+UPDATE applications SET ativo = TRUE;
