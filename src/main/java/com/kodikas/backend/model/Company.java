@@ -40,4 +40,17 @@ public class Company {
 
     @Column(nullable = false)
     private Boolean ativo = true;
+
+
+    public List<Long> getUsersIds() {
+        return users.stream()
+                .map(User::getId)
+                .toList();
+    }
+
+    public List<Long> getProjectsIds() {
+        return projects.stream()
+                .map(Project::getId)
+                .toList();
+    }
 }

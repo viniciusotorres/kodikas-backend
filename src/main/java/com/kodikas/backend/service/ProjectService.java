@@ -57,12 +57,12 @@ public class ProjectService {
 
     public ResponseCreateProjectDTO createProject(Project project) {
         User user = userService.getUserById(project.getUser().getId());
-        Company company = companyService.getCompanyById(project.getCompany().getId());
+        Company company = companyService.getCompany(project.getCompany().getId());
 
         if (company == null) {
             throw new IllegalArgumentException("Empresa não encontrada");
         } else {
-            project.setCompany(company);
+
         }
 
         if (user == null) {
@@ -83,7 +83,7 @@ public class ProjectService {
 
     public ResponseDetailsProject updateProject(Long id, Project projectDetails) {
         Project project = projectRepository.findById(id).orElse(null);
-        Company company = companyService.getCompanyById(projectDetails.getCompany().getId());
+        Company company = companyService.getCompany(projectDetails.getCompany().getId());
         User user = userService.getUserById(projectDetails.getUser().getId());
 
         if (company == null) {
@@ -127,7 +127,9 @@ public class ProjectService {
         return false;
     }
 
-    public Project getProjectByIdForApplication(Long id) {
+    public Project getProject(Long id) {
         return projectRepository.findById(id).orElse(null);
     }
+
+
 }
