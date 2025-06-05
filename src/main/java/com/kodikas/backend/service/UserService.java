@@ -1,12 +1,12 @@
 package com.kodikas.backend.service;
 
 import com.kodikas.backend.dto.userDTO.*;
+import com.kodikas.backend.exception.UserNotFoundException;
 import com.kodikas.backend.model.Company;
 import com.kodikas.backend.model.User;
 import com.kodikas.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,16 +18,24 @@ import java.util.List;
 public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CompanyService companyService;
+    private final UserRepository userRepository;
+    private final CompanyService companyService;
 
     /**
-     * Obtém todos os usuários ativos.
+     * Construtor para injetar dependências.
      *
-     * @return Lista de DTOs de usuários ativos.
+     * @param userRepository Repositório de usuários.
+     * @param companyService Serviço de empresas.
+     */
+    public UserService(UserRepository userRepository, CompanyService companyService) {
+        this.userRepository = userRepository;
+        this.companyService = companyService;
+    }
+
+    /**
+     * Retorna todos os usuários ativos.
+     *
+     * @return Lista de usuários ativos.
      */
     public List<ResponseListUsers> getAllUsers() {
         return userRepository.findAll().stream()
@@ -37,16 +45,15 @@ public class UserService {
     }
 
     /**
-     * Obtém os detalhes de um usuário pelo ID.
+     * Retorna os detalhes de um usuário pelo ID.
      *
      * @param id ID do usuário.
-     * @return DTO com os detalhes do usuário.
-     * @throws IllegalArgumentException se o usuário não for encontrado.
+     * @return Detalhes do usuário.
+     * @throws UserNotFoundException se o usuário não for encontrado.
      */
     public ResponseDetailUserDTO getUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Usuário não encontrado com o ID: " + id)
-        );
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         logger.info("Usuário encontrado com ID: {}", id);
         return mapToDetailResponse(user);
@@ -55,11 +62,11 @@ public class UserService {
     /**
      * Cria um novo usuário.
      *
-     * @param user Dados para criação do usuário.
-     * @return DTO com os detalhes do usuário criado.
+     * @param dto Dados para criação do usuário.
+     * @return Detalhes do usuário criado.
      */
-    public ResponseCreateUserDTO createUser(DataCreateUserDTO user) {
-        User newUser = mapToEntityCreate(user);
+    public ResponseCreateUserDTO createUser(DataCreateUserDTO dto) {
+        User newUser = mapToEntityCreate(dto);
         User savedUser = userRepository.save(newUser);
 
         logger.info("Usuário criado com ID: {}", savedUser.getId());
@@ -69,32 +76,18 @@ public class UserService {
     /**
      * Atualiza os dados de um usuário existente.
      *
-     * @param id ID do usuário a ser atualizado.
-     * @param userDetails Dados para atualização do usuário.
-     * @return DTO com os detalhes do usuário atualizado.
-     * @throws IllegalArgumentException se a empresa associada não for encontrada.
+     * @param id  ID do usuário a ser atualizado.
+     * @param dto Dados para atualização do usuário.
+     * @return Detalhes do usuário atualizado.
+     * @throws UserNotFoundException se o usuário não for encontrado.
      */
-    public ResponseDetailUserDTO updateUser(Long id, DataUpdateUser userDetails) {
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Usuário não encontrado com o ID: " + id)
-        );
+    public ResponseDetailUserDTO updateUser(Long id, DataUpdateUser dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-        if (userDetails.name() != null) {
-            user.setName(userDetails.name());
-        }
-        if (userDetails.email() != null) {
-            user.setEmail(userDetails.email());
-        }
-
-        if (userDetails.companyId() != null) {
-            Company company = companyService.getCompany(userDetails.companyId());
-            if (company == null) {
-                throw new IllegalArgumentException("Empresa não encontrada com o ID: " + userDetails.companyId());
-            }
-            user.setCompany(company);
-        }
-
+        user.updateFrom(dto, companyService);
         User updatedUser = userRepository.save(user);
+
         logger.info("Usuário atualizado com ID: {}", updatedUser.getId());
         return mapToDetailResponse(updatedUser);
     }
@@ -103,12 +96,11 @@ public class UserService {
      * Exclui logicamente um usuário pelo ID.
      *
      * @param id ID do usuário a ser excluído.
-     * @throws IllegalArgumentException se o usuário não for encontrado.
+     * @throws UserNotFoundException se o usuário não for encontrado.
      */
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Usuário não encontrado com o ID: " + id)
-        );
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         logger.info("Deletando usuário com ID: {}", id);
         user.setAtivo(false);
@@ -120,17 +112,19 @@ public class UserService {
      * Obtém um usuário pelo ID.
      *
      * @param id ID do usuário.
-     * @return Entidade User ou null se não encontrado.
+     * @return Entidade do usuário.
+     * @throws UserNotFoundException se o usuário não for encontrado.
      */
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     /**
-     * Mapeia uma entidade User para um DTO de lista.
+     * Mapeia um usuário para um DTO de resposta de lista.
      *
-     * @param user Entidade User.
-     * @return DTO de lista de usuários.
+     * @param user Entidade do usuário.
+     * @return DTO de resposta de lista.
      */
     private ResponseListUsers mapToResponse(User user) {
         return new ResponseListUsers(
@@ -143,10 +137,10 @@ public class UserService {
     }
 
     /**
-     * Mapeia uma entidade User para um DTO detalhado.
+     * Mapeia um usuário para um DTO de resposta detalhada.
      *
-     * @param user Entidade User.
-     * @return DTO detalhado do usuário.
+     * @param user Entidade do usuário.
+     * @return DTO de resposta detalhada.
      */
     private ResponseDetailUserDTO mapToDetailResponse(User user) {
         return new ResponseDetailUserDTO(
@@ -160,10 +154,10 @@ public class UserService {
     }
 
     /**
-     * Mapeia uma entidade User para um DTO de criação.
+     * Mapeia um usuário para um DTO de resposta de criação.
      *
-     * @param user Entidade User.
-     * @return DTO de criação do usuário.
+     * @param user Entidade do usuário.
+     * @return DTO de resposta de criação.
      */
     private ResponseCreateUserDTO mapToResponseCreate(User user) {
         return new ResponseCreateUserDTO(
@@ -177,10 +171,10 @@ public class UserService {
     }
 
     /**
-     * Mapeia os dados de criação para uma entidade User.
+     * Mapeia um DTO de criação para uma entidade de usuário.
      *
-     * @param dto Dados de criação do usuário.
-     * @return Entidade User.
+     * @param dto DTO de criação.
+     * @return Entidade de usuário.
      */
     private User mapToEntityCreate(DataCreateUserDTO dto) {
         User user = new User();

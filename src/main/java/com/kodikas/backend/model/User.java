@@ -1,5 +1,7 @@
 package com.kodikas.backend.model;
 
+import com.kodikas.backend.dto.userDTO.DataUpdateUser;
+import com.kodikas.backend.service.CompanyService;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,4 +48,14 @@ public class User {
 
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    public void updateFrom(DataUpdateUser dto, CompanyService companyService) {
+        if (dto.name() != null) this.setName(dto.name());
+        if (dto.email() != null) this.setEmail(dto.email());
+        if (dto.companyId() != null) {
+            Company company = companyService.getCompanyOrThrow(dto.companyId());
+            this.setCompany(company);
+        }
+    }
+
 }

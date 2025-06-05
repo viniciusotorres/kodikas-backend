@@ -3,6 +3,7 @@ package com.kodikas.backend.service;
 import com.kodikas.backend.dto.companiesDTO.DataCreateCompanyDTO;
 import com.kodikas.backend.dto.companiesDTO.DataUpdateCompany;
 import com.kodikas.backend.dto.companiesDTO.ResponseCreateCompany;
+import com.kodikas.backend.exception.CompanyNotFoundException;
 import com.kodikas.backend.model.Company;
 import com.kodikas.backend.model.Project;
 import com.kodikas.backend.model.User;
@@ -211,5 +212,13 @@ public class CompanyService {
                 }
             }
         }
+    }
+
+    public Company getCompanyOrThrow(Long id) {
+        Company company = getCompany(id);
+        if (company == null) {
+            throw new CompanyNotFoundException(id);
+        }
+        return company;
     }
 }

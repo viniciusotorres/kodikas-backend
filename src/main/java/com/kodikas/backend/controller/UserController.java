@@ -1,12 +1,12 @@
 package com.kodikas.backend.controller;
 
 import com.kodikas.backend.constants.ApiPaths;
+import com.kodikas.backend.dto.errorDTO.ErrorResponse;
 import com.kodikas.backend.dto.userDTO.*;
 import com.kodikas.backend.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,107 +20,74 @@ import java.util.List;
 @RestController
 @RequestMapping(ApiPaths.API_V1 + "/users")
 public class UserController {
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     /**
      * Retorna todos os usuários ativos.
      *
-     * @return ResponseEntity contendo a lista de usuários ativos.
+     * @return Lista de usuários ativos.
      */
     @GetMapping("/list")
     public ResponseEntity<List<ResponseListUsers>> getAllUsers() {
-        try {
-            List<ResponseListUsers> users = userService.getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            logger.error("Erro ao buscar usuários: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        List<ResponseListUsers> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     /**
      * Retorna os detalhes de um usuário pelo ID.
      *
      * @param id ID do usuário.
-     * @return ResponseEntity contendo os detalhes do usuário.
+     * @return Detalhes do usuário.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseDetailUserDTO> getUserId(@PathVariable Long id) {
-        try {
-            ResponseDetailUserDTO user = userService.getUser(id);
-            return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            logger.error("Usuário não encontrado com ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            logger.error("Erro ao buscar usuário: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ResponseDetailUserDTO> getUserById(@PathVariable Long id) {
+        ResponseDetailUserDTO user = userService.getUser(id);
+        return ResponseEntity.ok(user);
     }
 
     /**
      * Cria um novo usuário.
      *
      * @param user Dados para criação do usuário.
-     * @return ResponseEntity contendo os detalhes do usuário criado.
+     * @return Detalhes do usuário criado.
      */
     @PostMapping("/create")
     @Transactional
-    public ResponseEntity<ResponseCreateUserDTO> createUser(@RequestBody DataCreateUserDTO user) {
-        try {
-            ResponseCreateUserDTO createdUser = userService.createUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        } catch (EntityNotFoundException e) {
-            logger.error("Usuário não encontrado: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            logger.error("Erro ao criar usuário: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ResponseCreateUserDTO> createUser(@Valid @RequestBody DataCreateUserDTO user) {
+        ResponseCreateUserDTO createdUser = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
     /**
      * Atualiza os dados de um usuário existente.
      *
-     * @param id ID do usuário a ser atualizado.
-     * @param user Dados para atualização do usuário.
-     * @return ResponseEntity contendo os detalhes do usuário atualizado.
+     * @param id   ID do usuário.
+     * @param user Dados atualizados do usuário.
+     * @return Detalhes do usuário atualizado.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseDetailUserDTO> updateUser(@PathVariable Long id, @RequestBody DataUpdateUser user) {
-        try {
-            ResponseDetailUserDTO updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(updatedUser);
-        } catch (EntityNotFoundException e) {
-            logger.error("Usuário não encontrado com ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            logger.error("Erro ao atualizar usuário: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ResponseDetailUserDTO> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody DataUpdateUser user) {
+        ResponseDetailUserDTO updatedUser = userService.updateUser(id, user);
+        return ResponseEntity.ok(updatedUser);
     }
 
     /**
-     * Exclui logicamente um usuário pelo ID.
+     * Realiza exclusão lógica de um usuário.
      *
-     * @param id ID do usuário a ser excluído.
-     * @return ResponseEntity vazio indicando o sucesso ou falha da operação.
+     * @param id ID do usuário.
+     * @return Status 204 (No Content) se for bem-sucedido.
      */
     @PutMapping("/delete/{id}")
     @Transactional
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (EntityNotFoundException e) {
-            logger.error("Usuário não encontrado com ID: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            logger.error("Erro ao excluir usuário: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }
